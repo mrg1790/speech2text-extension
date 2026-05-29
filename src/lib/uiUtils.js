@@ -2,7 +2,7 @@ import Meta from "gi://Meta";
 import St from "gi://St";
 import * as Config from "resource:///org/gnome/shell/misc/config.js";
 import { COLORS, STYLES } from "./constants.js";
-import { log } from "./resourceUtils.js";
+import { log, isWaylandCompositor } from "./resourceUtils.js";
 
 // Helper function to create button styles
 export function createButtonStyle(baseColor, hoverColor) {
@@ -32,7 +32,7 @@ export function addHandCursorToButton(button) {
     }
   })();
 
-  const isWayland = Meta.is_wayland_compositor();
+  const isWayland = isWaylandCompositor();
 
   // Disable cursor changes on GNOME 48+ Wayland due to crashes
   if (isGNOME48Plus && isWayland) {

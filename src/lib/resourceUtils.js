@@ -2,6 +2,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import Clutter from "gi://Clutter";
 import Gio from "gi://Gio";
 import GLib from "gi://GLib";
+import Meta from "gi://Meta";
 
 let _debugEnabled = null;
 export function isDebugEnabled() {
@@ -22,6 +23,31 @@ export const log = {
   warn: (...args) => console.warn(...args),
   error: (...args) => console.error(...args),
 };
+
+/**
+ * Detect whether the shell is running as a Wayland compositor.
+ *
+ * Meta.is_wayland_compositor() was removed in GNOME 50 / Mutter 18, so calling
+ * it directly throws "is_wayland_compositor is not a function" and takes down
+ * any dialog that touches it (recording dialog, settings dialog, hover buttons).
+ * Prefer the Meta API when it still exists (older GNOME), and fall back to the
+ * session environment, which is reliable inside the gnome-shell process.
+ *
+ * @returns {boolean} true if running on Wayland
+ */
+export function isWaylandCompositor() {
+  try {
+    if (typeof Meta.is_wayland_compositor === "function") {
+      return Meta.is_wayland_compositor();
+    }
+  } catch (_e) {
+    // Fall through to environment-based detection.
+  }
+
+  const sessionType = (GLib.getenv("XDG_SESSION_TYPE") || "").toLowerCase();
+  if (sessionType) return sessionType === "wayland";
+  return !!GLib.getenv("WAYLAND_DISPLAY");
+}
 
 /**
  * Read the installed service configuration from install-state.conf.
